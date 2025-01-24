@@ -16,7 +16,9 @@ boto3_session = boto3.session.Session()
 region_name = boto3_session.region_name
 bedrock_client = boto3.client(
     "bedrock-runtime",
-    region_name,
+    region_name=os.getenv("AWS_DEFAULT_REGION"),
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY")
 )
 
 
@@ -26,7 +28,7 @@ bedrock_client = boto3.client(
 def titan_multimodal_embedding(
     image_path: str = None,  # maximum 2048 x 2048 pixels
     description: str = None,  # English only and max input tokens 128
-    dimension: int = 1024,  # 1,024 (default), 384, 256
+    dimension: int = 1536,  # 1,024 (default), 384, 256
     model_id: str = "amazon.titan-embed-image-v1",
 ):
 
@@ -55,9 +57,9 @@ def titan_multimodal_embedding(
 
 
 def titan_text_embedding(
-    text: str,  # English only and max input tokens 128
-    dimension: int = 1024,  # 1,024 (default), 384, 256
-    model_id: str = "amazon.titan-embed-text-v2:0",
+    text: str,
+    dimension: int = 1536,
+    model_id: str = "amazon.titan-embed-g1-text-02",
 ):
     payload_body = {
         "inputText": text,
@@ -128,7 +130,7 @@ if __name__ == "__main__":
     if not pc.has_index(index_name):
         pc.create_index(
             name=index_name,
-            dimension=1024,
+            dimension=1536,
             metric="cosine",
             spec=ServerlessSpec(cloud="aws", region="us-east-1"),
         )

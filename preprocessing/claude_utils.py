@@ -2,7 +2,10 @@ import json
 import logging
 import base64
 from botocore.exceptions import ClientError
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
 
 MODEL = "anthropic.claude-3-haiku-20240307-v1:0"
 MAX_TOKENS = 256
@@ -97,25 +100,27 @@ def ask_claude_vqa_response(user_query, vdb_response):
     client = AnthropicBedrock()
     messages = format_messages_for_claude(user_query, vdb_response)
     system_prompt = """
+    You are a friendly assistant helping people interpret their videos at their company.
 
-You are a friendly assistant helping people interpret their videos at their company.
+    You will recieve frames of these videos, with descriptions of what has happened in the frames, as well as a user query
 
-You will recieve frames of these videos, with descriptions of what has happened in the frames, as well as a user query
+    Your job is to ingest the images and text, and respond to the user's query or question based on the context provided.
 
-Your job is to ingest the images and text, and respond to the user's query or question based on the context provided.
-
-Refer back to the images and text provided to guide the user to the appropriate slide, section, webinar, or talk
-where the information they are looking for is located.
+    Refer back to the images and text provided to guide the user to the appropriate slide, section, webinar, or talk
+    where the information they are looking for is located.
     """
     response = client.messages.create(
-        model=MODEL, max_tokens=MAX_TOKENS * 10, system=system_prompt, messages=messages
+        model=MODEL,
+        max_tokens=MAX_TOKENS * 10,
+        system=system_prompt,
+        messages=messages
     )
     return response.content[0].text
 
 
 def ask_claude(img, text):
     # best for one off queries
-    client = AnthropicBedrock(aws_region="us-east-1")
+    client = AnthropicBedrock()
     if img:
         img_b64 = convert_image_to_base64(img)
         message = client.messages.create(
@@ -148,7 +153,7 @@ def ask_claude(img, text):
 
 
 def make_claude_transcript_summary(transcript):
-    client = AnthropicBedrock(aws_region="us-east-1")
+    client = AnthropicBedrock()
 
     prompt = "Summarize the following transcript, being as concise as possible:"
     message = client.messages.create(
@@ -163,7 +168,7 @@ def create_contextual_frame_description(
     frame_caption_index, frame_caption_pairs, transcript_summary
 ):
     # frame caption pair will have an image, and a transcript. Window is in seconds
-    client = AnthropicBedrock(aws_region="us-east-1")
+    client = AnthropicBedrock()
 
     # gather context, look 4 frame widths before and after. Make sure not to go out of bounds if near beginning or end of video.
 
